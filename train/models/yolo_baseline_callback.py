@@ -157,6 +157,12 @@ class BaselineLoggerCallback:
         if current_map50 > self.best_map50:
             self.best_map50 = current_map50
 
+        print(
+            f"[Baseline] ep{self.current_epoch:3d} | "
+            f"mAP50={current_map50:.4f} | "
+            f"best={self.best_map50:.4f}"
+        )
+
         t1 = time.perf_counter()
         try:
             self.logger.log_epoch(
