@@ -243,12 +243,8 @@ class FuzzyLRConfig:
     warmup_epochs: int = 3
 
     # Scale hysteresis (degisim hizi sinirlamasi)
-    # 0.08/0.10 → 0.04/0.06: scale yon flip orani ~%18 → ~%10 hedefi.
-    # Why: cal_s42 ep45-55 dipinde scale yon flip %20.2 → ani LR oynamasi
-    # mAP toparlanmasini geciktiriyor. Daraltilmis hysteresis fuzzy etkisini
-    # KESMIYOR, sadece daha yumusak uyguluyor (ayni karar, 2x daha cok step'te).
-    hysteresis_frac_min: float = 0.04
-    hysteresis_frac_max: float = 0.06
+    hysteresis_frac_min: float = 0.08
+    hysteresis_frac_max: float = 0.10
 
     # Overfitting
     overfitting_threshold: float = 0.8
