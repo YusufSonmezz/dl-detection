@@ -1,0 +1,15 @@
+
+19.12.2025
+1. Verisetini küçülteceğim.
+Küçüldü ve dengelendi.
+1041 yeni train
+219 yeni valid
+
+2. Sırasıyla 0.5, 0.4, 0.3, 0.2, 0.1, 0.01, 0.001 LR ile eğitim yapacağım.
+Yapıldı. Ancak 0.5'ten 0.1'e kadar bütün değerler nan değerler döndürecek kadar büyüktüler.
+Bu sebeple 0.1'den başlayarak 0.01, 0.001, 0.0001, 0.00001 değerleri denendi. (5 değer)
+
+3. Eğitim yaptığım LR değerlerini karşılaştıracağım.
+En stabil ve hızlı sonucu 0.0001 ile aldım.
+
+4. Bulanık girdilerime tekrar bakacağım.

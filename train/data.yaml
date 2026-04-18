@@ -1,0 +1,16 @@
+# train/config.yaml
+path: C:/Users/Yusuf/Desktop/YL/Tez/dl-detection/train/dataset_gc10
+
+train: train
+val:   valid
+test:  test
+
+nc: 10
+names: ['crease', 'crescent_gap', 'inclusion', 'oil_spot', 'punching_hole', 'rolled_pit', 'silk_spot', 'waist_folding', 'water_spot', 'welding_line']
+
+roboflow:
+  workspace: machinelearning-p49ei
+  project: gc10-det-dataset
+  version: 4
+  license: Public Domain
+  url: https://universe.roboflow.com/machinelearning-p49ei/gc10-det-dataset/dataset/4

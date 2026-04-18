@@ -1,0 +1,16 @@
+# train/config.yaml
+path: C:/Users/Yusuf/Desktop/YL/Tez/dl-detection/train/dataset
+
+train: train
+val:   valid
+# test: C:/Users/Yusuf/Desktop/YL/Tez/dl-detection/train/dataset/test/_annotations.coco.json  # opsiyonel
+
+# Sınıf sayısı ve isimleri
+nc: 21
+names:
+  [
+    "aeroplane", "bicycle", "bird", "boat", "bottle",
+    "bus", "car", "cat", "chair", "cow",
+    "diningtable", "dog", "horse", "motorbike", "person",
+    "pottedplant", "sheep", "sofa", "train", "tvmonitor", "background"
+  ]

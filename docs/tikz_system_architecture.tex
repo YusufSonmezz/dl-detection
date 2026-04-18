@@ -1,0 +1,263 @@
+% ============================================================
+% Fuzzy LR Scheduler -- Sistem Mimarisi v5
+% \frac kullanilmiyor, tum math sadeleştirildi
+% ============================================================
+\documentclass[tikz, border=14pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, backgrounds, fit, calc}
+\usepackage[T1]{fontenc}
+
+% ---------- Renkler ----------
+\definecolor{cBlue}  {RGB}{28,  75, 160}
+\definecolor{cGreen} {RGB}{18, 115,  65}
+\definecolor{cRed}   {RGB}{165,  30,  30}
+\definecolor{cOrange}{RGB}{185,  95,  10}
+\definecolor{cGray}  {RGB}{75,   75,  75}
+\definecolor{lBlue}  {RGB}{222, 234, 255}
+\definecolor{lGreen} {RGB}{210, 244, 222}
+\definecolor{lRed}   {RGB}{255, 218, 218}
+\definecolor{lOrange}{RGB}{255, 236, 210}
+\definecolor{lYellow}{RGB}{255, 251, 208}
+\definecolor{lGray}  {RGB}{240, 240, 240}
+
+% ---------- Node stilleri ----------
+\tikzset{
+  arr/.style ={-{Stealth[length=6pt,width=4pt]},
+               line width=1.2pt, color=black!50},
+  darr/.style={-{Stealth[length=5pt,width=3.5pt]},
+               line width=0.9pt, color=black!35, dashed},
+  NB/.style={rectangle, rounded corners=4pt,
+             fill=lBlue, draw=cBlue, line width=1.2pt,
+             font=\small\bfseries\color{cBlue},
+             minimum width=2.8cm, minimum height=0.9cm, align=center},
+  NG/.style={rectangle, rounded corners=4pt,
+             fill=lGreen, draw=cGreen, line width=1.2pt,
+             font=\small\bfseries\color{cGreen},
+             minimum width=#1, minimum height=0.9cm, align=center},
+  NG/.default=10cm,
+  NR/.style={rectangle, rounded corners=4pt,
+             fill=lRed, draw=cRed, line width=1.2pt,
+             font=\small\bfseries\color{cRed},
+             minimum width=6.2cm, minimum height=0.9cm, align=center},
+  NY/.style={rectangle, rounded corners=4pt,
+             fill=lYellow, draw=cOrange!60, line width=1pt,
+             font=\small\color{cOrange!80!black},
+             minimum width=6.2cm, minimum height=0.9cm, align=center},
+  NI/.style={rectangle, rounded corners=4pt,
+             fill=lGray, draw=cGray!60, line width=1pt,
+             font=\small\color{cGray},
+             minimum width=5.6cm, minimum height=0.9cm, align=center},
+  NO/.style={rectangle, rounded corners=4pt,
+             fill=lOrange, draw=cOrange, line width=1.2pt,
+             font=\small\bfseries\color{cOrange},
+             minimum width=4.8cm, minimum height=0.9cm, align=center},
+  NRule/.style={rectangle, rounded corners=3pt,
+                fill=lYellow, draw=black!25, line width=0.8pt,
+                font=\scriptsize,
+                minimum width=3.0cm, minimum height=1.2cm, align=center},
+  grp/.style={rectangle, rounded corners=7pt,
+              draw=#1!70, line width=1.5pt, dashed, fill=#1!5,
+              inner sep=9pt},
+}
+
+\begin{document}
+\begin{tikzpicture}
+
+%% SATIR 1 -- YOLOv8  (y=0)
+\node[NB] (batch)    at ( 0.0, 0) {Egitim Batch'i};
+\node[NB] (forward)  at ( 3.4, 0) {YOLOv8s\\Ileri Gecis};
+\node[NB] (lossnd)   at ( 6.8, 0) {Kayip\\box+cls+dfl};
+\node[NB] (backward) at (10.2, 0) {Geri Yayilim};
+
+\draw[arr] (batch)   -- (forward);
+\draw[arr] (forward) -- (lossnd);
+\draw[arr] (lossnd)  -- (backward);
+
+%% SATIR 2 -- Giris Sinyalleri  (y=-2.6)
+\node[NI] (ema) at (3.4, -2.6)
+  {\textbf{Bagil Delta Kayip}\\
+   $v_t = 0.8\,v_{t-1} + 0.2\,\ell_t$\\
+   $\delta_r = \Delta v \;/\; |v_{t-1}|$};
+
+\node[NI] (gnorm) at (9.8, -2.6)
+  {\textbf{Gradyan Normu}\\
+   $\|g\|_{\log} = \log(1{+}\|\nabla\|) / \log(501) \times 5$\\
+   Aralik: $[0.5,\; 8.5]$};
+
+\draw[arr] (lossnd.south)   -- ++(0,-0.45) -| (ema.north);
+\draw[arr] (backward.south) -- ++(0,-0.45) -| (gnorm.north);
+
+\node[font=\scriptsize\itshape, color=cGray] at (4.5, -1.1)
+  {on\_train\_batch\_end};
+\node[font=\scriptsize\itshape, color=cGray] at (11.5, -1.1)
+  {on\_train\_batch\_start};
+
+%% SATIR 3 -- Bulanik Girisler  (y=-4.8)
+\node[NG] (finputs) at (6.6, -4.8)
+  {\textbf{Bulanik Girisler} -- 5 Degisken\\
+   {\footnotesize
+    $\delta_r$ (bagil kayip) \quad
+    $\|g\|$ (grad.\ norm) \quad
+    $p$ (plato adimi) \quad
+    $\gamma$ (val-train farki) \quad
+    $\tau$ (epoch orani)}};
+
+\draw[arr] (ema.south)   -- ++(0,-0.35) -| ([xshift=-2cm]finputs.north);
+\draw[arr] (gnorm.south) -- ++(0,-0.35) -| ([xshift= 2cm]finputs.north);
+
+%% SATIR 4 -- Bulaniklaştirma  (y=-6.4)
+\node[NG] (fuzz) at (6.6, -6.4)
+  {\textbf{Bulaniklaştirma}\\
+   {\footnotesize
+    trimf ve trapmf uyelik fonksiyonlari
+    \quad
+    5 degisken $\times$ 3--4 kume $=$ 15 uyelik degeri}};
+
+\draw[arr] (finputs) -- (fuzz);
+
+%% SATIR 5 -- Kural Tabani  (y=-8.0)
+\node[NG] (rules) at (6.6, -8.0)
+  {\textbf{Kural Tabani} -- 13 Kural\\
+   {\footnotesize
+    \textbf{A.} Hizlanma (5) \quad
+    \textbf{B.} Frenleme (4) \quad
+    \textbf{C.} Plato Kacis (3) \quad
+    \textbf{D.} Stabilizator (1)}};
+
+\draw[arr] (fuzz) -- (rules);
+
+%% SATIR 6 -- Kural Kutulari  (y=-10.0)
+\node[NRule] (rA) at (2.0, -10.0)
+  {\textbf{A -- Hizlan}\\
+   $\delta_r{\downarrow} \wedge \tau{=}$erken\\
+   $\Rightarrow$ scale $= 1.08$};
+
+\node[NRule] (rB) at (5.4, -10.0)
+  {\textbf{B -- Fren}\\
+   $\delta_r{\uparrow} \Rightarrow 0.95$\\
+   $\|g\|{\uparrow} \Rightarrow 0.92$};
+
+\node[NRule] (rC) at (8.8, -10.0)
+  {\textbf{C -- Plato Kacis}\\
+   $p{=}$uzun $\wedge \tau{=}$erken\\
+   $\Rightarrow$ scale $= 1.07$};
+
+\node[NRule] (rD) at (12.2, -10.0)
+  {\textbf{D -- Stabilizator}\\
+   $\gamma{=}$saglikli $\wedge p{=}$kisa\\
+   $\Rightarrow$ scale $= 1.0$};
+
+\draw[darr] (rules.south) -- ++(0,-0.4) -| (rA.north);
+\draw[darr] (rules.south) -- ++(0,-0.4) -| (rB.north);
+\draw[darr] (rules.south) -- ++(0,-0.4) -| (rC.north);
+\draw[darr] (rules.south) -- ++(0,-0.4) -| (rD.north);
+
+%% SATIR 7 -- Durulastirma  (y=-12.0)
+\node[NG=11cm] (defuzz) at (6.6, -12.0)
+  {\textbf{Durulastirma} -- Agirlikli Ortalama (Centroid)\\
+   {\footnotesize
+    scale $= \sum w_i c_i \;/\; \sum w_i$
+    \qquad
+    $w_i = \min$(ilgili uyelik dereceleri)}};
+
+\draw[arr] (rA.south) -- ++(0,-0.4) -| ([xshift=-3.0cm]defuzz.north);
+\draw[arr] (rB.south) -- ++(0,-0.4) -| ([xshift=-1.0cm]defuzz.north);
+\draw[arr] (rC.south) -- ++(0,-0.4) -| ([xshift= 1.0cm]defuzz.north);
+\draw[arr] (rD.south) -- ++(0,-0.4) -| ([xshift= 3.0cm]defuzz.north);
+
+%% SATIR 8 -- Histerezis  (y=-13.6)
+\node[NG] (hyst) at (6.6, -13.6)
+  {\textbf{Histerezis ve Sinirlama}\\
+   {\footnotesize
+    $|\Delta\text{scale}| \leq \text{clamp}(0.10 - 0.15\tau,\; 0.08,\; 0.10)$
+    \qquad
+    scale $\in [0.90,\; 1.10]$}};
+
+\draw[arr] (defuzz) -- (hyst);
+
+%% SATIR 9 -- Kosinus (sol) + Nihai LR (sag)  (y=-15.6)
+\node[NY] (cosine) at (3.0, -15.6)
+  {\textbf{Kosinus LR Tabani}\\
+   {\footnotesize
+    $\text{lr}_{\cos} = \text{lr}_0 \cdot
+    [(1{+}\cos(\pi p))(1{-}\ell)/2 + \ell]$\\
+    $\text{lr}_0 = 0.01,\quad \ell = 0.01,\quad p \in [0,1]$\\
+    Warmup: ilk 3 epoch lineer artis}};
+
+\node[NR] (finallr) at (10.2, -15.6)
+  {\textbf{Nihai Ogrenme Orani}\\
+   {\footnotesize
+    $\text{lr} = \text{clamp}(\text{lr}_{\cos} \times \text{scale},\;
+    10^{-6},\; 10^{-3})$}};
+
+\draw[arr] (hyst.south) -- ++(0,-0.6) -| (cosine.north);
+\draw[arr] (hyst.south) -- ++(0,-0.6) -| (finallr.north);
+\draw[arr] (cosine.east) -- (finallr.west)
+  node[midway, above, font=\scriptsize, color=cOrange!80!black]
+  {$\times$ scale};
+
+%% SATIR 10 -- Optimizer  (y=-17.4)
+\node[NR] (optim) at (10.2, -17.4)
+  {\textbf{SGD Optimizer}\\
+   {\footnotesize param\_groups[0]["lr"] $\leftarrow$ lr}};
+
+\draw[arr] (finallr) -- (optim);
+
+%% SAG PANEL -- Epoch Sonu  (x=16.2)
+\node[NO] (epochend) at (16.2, -13.6)
+  {\textbf{Epoch Sonu}\\
+   {\scriptsize\itshape on\_fit\_epoch\_end}\\
+   {\footnotesize
+    mAP50 oku\\
+    PlateauTracker guncelle\\
+    $p \leftarrow p{+}1$ veya $p \leftarrow 0$\\
+    $\gamma \leftarrow v_{\ell} - t_{\ell}$\\
+    Kosinus: $p_{\cos} \mathrel{+}= 1/(T{-}3)$}};
+
+\draw[arr, color=cOrange]
+  (optim.east) -- ++(0.5,0) |- (epochend.south);
+
+\draw[darr, color=cOrange]
+  (epochend.north) -- ++(0,0.8) -|
+  ([xshift=4.2cm]finputs.north east)
+  node[near start, above, font=\scriptsize\itshape, color=cOrange]
+  {$p,\,\gamma$ guncelle};
+
+%% ARKA PLAN GRUPLARI
+\begin{scope}[on background layer]
+
+\node[grp=cBlue,
+      fit=(batch)(forward)(lossnd)(backward),
+      label={[font=\footnotesize\bfseries\color{cBlue},
+              anchor=south west]north west:YOLOv8 Egitim Dongusu}
+     ] {};
+
+\node[grp=cGray,
+      fit=(ema)(gnorm),
+      label={[font=\footnotesize\bfseries\color{cGray},
+              anchor=south west]north west:Adim Duzeyinde Giris Sinyalleri}
+     ] {};
+
+\node[grp=cGreen,
+      fit=(finputs)(fuzz)(rules)(rA)(rB)(rC)(rD)(defuzz)(hyst),
+      label={[font=\small\bfseries\color{cGreen},
+              anchor=south west]north west:Bulanik Mantik Denetleyicisi}
+     ] {};
+
+\node[grp=cRed,
+      fit=(cosine)(finallr)(optim),
+      label={[font=\footnotesize\bfseries\color{cRed},
+              anchor=south west]north west:Ogrenme Orani Guncelleme}
+     ] {};
+
+\end{scope}
+
+%% DIPNOT
+\node[font=\scriptsize\itshape, color=black!40,
+      text width=13cm, align=center] at (6.6, -19.0)
+  {Her egitim adiminda (on\_train\_batch\_end) calisir.
+   Kosinus LR tabani her epoch sonunda ilerler.
+   Bulanik sistem yalnizca olcek ($\pm$10\%) uzerinden mikro ayar yapar.};
+
+\end{tikzpicture}
+\end{document}

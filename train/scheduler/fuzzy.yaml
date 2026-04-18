@@ -1,0 +1,9 @@
+fuzzy:
+  base_lr: 0.001
+  lr_min: 1.0e-6
+  lr_max: 1.0e-2
+  scale_min: 0.5
+  scale_max: 1.5
+  hysteresis_frac_min: 0.05
+  hysteresis_frac_max: 0.20
+  eval_interval: 400   # kaç adımda bir mini-val ölçüp delta_acc güncellersin

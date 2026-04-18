@@ -1,0 +1,8 @@
+path: C:/Users/Yusuf/Desktop/YL/Tez/dl-detection/train/dataset_neudet
+
+train: train
+val:   valid
+test:  test
+
+nc: 6
+names: ['crazing', 'inclusion', 'patches', 'pitted_surface', 'rolled-in_scale', 'scratches']

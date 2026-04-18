@@ -1,0 +1,47 @@
+# Veri setleri (cok buyuk, Drive'da tutuluyor)
+train/dataset/
+train/dataset_gc10/
+train/dataset_neudet/
+train/dataset_neudet_augmented/
+train/dataset_neudet_org/
+train/dataset_neudet_org_yolo/
+
+# Model agirliklari
+*.pt
+*.pth
+*.onnx
+*.torchscript
+
+# Eğitim çıktıları
+artifacts/runs/
+artifacts/grid_search/
+artifacts/analysis/
+artifacts/lr_comparison/
+artifacts/videos/
+experiments/
+runs/
+model_output/
+output/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Claude
+CLAUDE.md
+.claude/

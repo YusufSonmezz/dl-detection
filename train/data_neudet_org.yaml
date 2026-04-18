@@ -1,0 +1,7 @@
+path: C:/Users/Yusuf/Desktop/YL/Tez/dl-detection/train/dataset_neudet_org_yolo
+
+train: train/images
+val:   valid/images
+
+nc: 6
+names: ['crazing', 'inclusion', 'patches', 'pitted_surface', 'rolled-in_scale', 'scratches']

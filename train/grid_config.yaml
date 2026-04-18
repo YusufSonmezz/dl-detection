@@ -1,0 +1,25 @@
+# Grid Search Konfigurasyonu — Fuzzy LR Scheduler (NEU-DET Daraltilmis)
+# Kullanim: python train/grid_search.py --grid train/grid_config.yaml
+#
+# fuzzy_lr1e5_test bulgulari:
+#   - base_lr=0.00001 ile mAP50=0.6128 (baseline'i %3.5 gecti)
+#   - Up/down event orani 11.5:1 → scale bounds daraltilmali
+#   - scale_max=1.30 cok agresif, 1.10-1.15 daha kontrollu
+
+grid:
+  base_lr: [0.00005, 0.00001]
+  scale_min: [0.90, 0.95]
+  scale_max: [1.10, 1.15]
+  accel_boost: [1.0, 1.5]
+  brake_penalty: [0.5, 0.7]
+
+training:
+  epochs: 50
+  batch: 16
+  imgsz: 640
+  data: train/data_neudet.yaml
+  seed: 42
+
+output:
+  prefix: grid_neudet
+  results_dir: artifacts/grid_search

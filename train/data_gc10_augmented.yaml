@@ -1,0 +1,18 @@
+# train/data_gc10_augmented.yaml
+# Augmented GC10 dataset — train seti dengelenmiş, val/test orijinal
+path: C:/Users/Yusuf/Desktop/YL/Tez/dl-detection/train/dataset_gc10
+
+train: train_augmented   # augment_balance.py ile oluşturuldu
+val:   valid             # orijinal validation (değiştirilmedi)
+test:  test              # orijinal test (değiştirilmedi)
+
+nc: 10
+names: ['crease', 'crescent_gap', 'inclusion', 'oil_spot', 'punching_hole',
+        'rolled_pit', 'silk_spot', 'waist_folding', 'water_spot', 'welding_line']
+
+roboflow:
+  workspace: machinelearning-p49ei
+  project: gc10-det-dataset
+  version: 4
+  license: Public Domain
+  url: https://universe.roboflow.com/machinelearning-p49ei/gc10-det-dataset/dataset/4
