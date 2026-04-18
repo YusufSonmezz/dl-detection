@@ -270,20 +270,24 @@ class FuzzyLRController:
 
     def _mf_delta_loss(self, dl: float) -> dict:
         """
-        RELATIVE parti kaybi degisimi: (EMA_new - EMA_old) / |EMA_old|.
+        RELATIVE parti kaybi degisimi (DualEMA tabanli):
+            delta_loss = (EMA_fast - EMA_slow) / |EMA_slow|
+            EMA_fast (beta=0.80), EMA_slow (beta=0.95)
 
-        Mutlak delta_loss gec epochlarda kuculdugu icin MF'ler tutarsiz
-        calisiyordu (hizla_azalan ep0-30'da %4, ep60-100'de %0.3).
-        Relative delta_loss std'si tum fazlarda ~0.014 ile sabit.
+        DualEMA dagilimi tek-EMA'dan ~%35 daha genistir: slow EMA gecikmesi
+        farki her adimda biriktirir, bu yuzden kuyruklar genisler.
+        Esikler tek-EMA'ya gore proporsiyonel olarak genisletildi.
 
-        Esikler neudet_fuzzycos_100ep_v1 relative dagilimdan turetildi:
-        P5=-0.025, P25=-0.010, P50=-0.001, P75=+0.008, P95=+0.022
+        Esikler neudet_v4_improved_seed42 DualEMA dagilimdan turetildi
+        (n=9000): P5=-0.031, P10=-0.024, P25=-0.013, P50=-0.002,
+        P75=+0.010, P90=+0.021, P95=+0.028
+        Hedef accel/brake orani: ~1.14 (eski sistemle ayni)
         """
         return {
-            "hizla_azalan": trapmf(dl, -999, -999, -0.03, -0.01),
-            "az_azalan":    trimf(dl, -0.02, -0.006, 0.0),
-            "durdu":        trimf(dl, -0.004, 0.0, 0.004),
-            "artan":        trapmf(dl, 0.003, 0.01, 999, 999),
+            "hizla_azalan": trapmf(dl, -999, -999, -0.045, -0.022),
+            "az_azalan":    trimf(dl, -0.035, -0.013, -0.001),
+            "durdu":        trimf(dl, -0.008, 0.0, 0.006),
+            "artan":        trapmf(dl, 0.004, 0.012, 999, 999),
         }
 
     def _mf_grad_norm(self, gn: float) -> dict:
@@ -398,9 +402,11 @@ class FuzzyLRController:
 
         # C. PLATO KACIS (phase-dependent)
         # Erken fazda guclu kesif, gec fazda hafif durtme.
-        rules.append((min(PL["uzun"], PH["erken"]),              1.07))  # C1
-        rules.append((min(PL["uzun"], PH["gec"]),                1.02))  # C2
-        rules.append((min(PL["cok_uzun"], VTG["healthy"]),       1.08))  # C3
+        # C3: epoch_ratio kosulu eklendi — gec fazda (ep65+) cosine fine-tuning'e
+        # karismamak icin devre disi. Eski C3 (%28 aktif) aşırı accel yapıyordu.
+        rules.append((min(PL["uzun"], PH["erken"]),                      1.07))  # C1
+        rules.append((min(PL["uzun"], PH["gec"]),                        1.02))  # C2
+        rules.append((min(PL["cok_uzun"], VTG["healthy"], PH["erken"]),  1.08))  # C3
 
         # D. STABILIZATOR
         # Saglikli + kisa plato = notr. 0.5 carpani baskinligi onler.
