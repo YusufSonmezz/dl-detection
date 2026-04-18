@@ -115,18 +115,27 @@ class DualEMA:
       - Alternasyon orani %52 → ~%20 (sinyal kararliligi)
 
     beta_fast=0.80, beta_slow=0.95 (onerilen degerler).
+
+    Warmup: slow EMA tau = 1/(1-beta_slow) = 20 step. Isınmadan once
+    delta sinyali guvenilmez (erken epochlarda yanlis brake/accel kararlari).
+    Warmup_steps boyunca 0.0 dondururuz → fuzzy stabilizatore (D1) birakir.
     """
-    def __init__(self, beta_fast: float = 0.80, beta_slow: float = 0.95):
+    def __init__(self, beta_fast: float = 0.80, beta_slow: float = 0.95,
+                 warmup_steps: int = 20):
         self.beta_fast = beta_fast
         self.beta_slow = beta_slow
+        self.warmup_steps = warmup_steps
         self._fast = None
         self._slow = None
+        self._step_count = 0
 
     def update(self, x: float) -> float:
         """
         Yeni loss degeri ile her iki EMA'yi guncelle.
         Returns: relative delta = (fast - slow) / |slow|
+        Warmup boyunca (ilk warmup_steps adim) 0.0 doner.
         """
+        self._step_count += 1
         if self._fast is None:
             self._fast = x
             self._slow = x
@@ -134,6 +143,10 @@ class DualEMA:
 
         self._fast = self.beta_fast * self._fast + (1 - self.beta_fast) * x
         self._slow = self.beta_slow * self._slow + (1 - self.beta_slow) * x
+
+        # Slow EMA henuz isinmadi → notr sinyal
+        if self._step_count < self.warmup_steps:
+            return 0.0
 
         if abs(self._slow) < 1e-8:
             return 0.0
@@ -230,8 +243,12 @@ class FuzzyLRConfig:
     warmup_epochs: int = 3
 
     # Scale hysteresis (degisim hizi sinirlamasi)
-    hysteresis_frac_min: float = 0.08
-    hysteresis_frac_max: float = 0.10
+    # 0.08/0.10 → 0.04/0.06: scale yon flip orani ~%18 → ~%10 hedefi.
+    # Why: cal_s42 ep45-55 dipinde scale yon flip %20.2 → ani LR oynamasi
+    # mAP toparlanmasini geciktiriyor. Daraltilmis hysteresis fuzzy etkisini
+    # KESMIYOR, sadece daha yumusak uyguluyor (ayni karar, 2x daha cok step'te).
+    hysteresis_frac_min: float = 0.04
+    hysteresis_frac_max: float = 0.06
 
     # Overfitting
     overfitting_threshold: float = 0.8
