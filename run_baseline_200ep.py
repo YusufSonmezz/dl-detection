@@ -1,7 +1,7 @@
 """
 Baseline cosine — 200 epoch, 3 seed ardarda.
-Colab'da calistir:
-    !python run_baseline_200ep.py
+Local'de calistir:
+    python run_baseline_200ep.py
 """
 import subprocess, sys, os
 
